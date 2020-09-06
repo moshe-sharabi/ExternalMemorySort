@@ -1,21 +1,15 @@
 package edu.hebrew.db.external;
 
-import javax.lang.model.type.NullType;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 
 
 public class ExternalMemoryImpl implements IExternalMemory {
-
-	private int sizeOfLine;
-	private int linesInRam;
 
 	private static final int bytesInBlock = 20000; // Y
 	private static final int blocksInRam = 1000; // M
@@ -60,9 +54,6 @@ public class ExternalMemoryImpl implements IExternalMemory {
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		String st = "a";
 		int filesCounter = 0;
-		String pattern = "(.*)(\\w+)(.*)";
-		Pattern r = Pattern.compile(pattern);
-		Matcher m = r.matcher(st);
 		while (st != null ) { // maybe add in while condition "&& m.find()" - if the last lines are empty string..
 			LinkedList<String> lines = new LinkedList<>();
 			LinkedList<String> selectedLines = new LinkedList<>() ;
@@ -235,7 +226,7 @@ public class ExternalMemoryImpl implements IExternalMemory {
 		}
 		//now delete the old files/runs which created
 		while(!saveOldRunsBeforeMerge.isEmpty()){
-			File todelete = ((LinkedList<File>) saveOldRunsBeforeMerge).remove(0);
+			File todelete = saveOldRunsBeforeMerge.remove(0);
 			if(!todelete.delete()){
 				System.err.println("cant delete this file: " + todelete.getName());
 			}
@@ -257,12 +248,12 @@ public class ExternalMemoryImpl implements IExternalMemory {
 	}
 
 	private void selecThrowException(String in, String out, int colNumSelect, String substrSelect) throws IOException {
-		sizeOfLine = getBytesOfLine(in); // X
-		linesInRam = blocksInRam * (bytesInBlock / sizeOfLine);
+		int sizeOfLine = getBytesOfLine(in); // X
+		int linesInRam = blocksInRam * (bytesInBlock / sizeOfLine);
 
 		File file = new File(in);
 		BufferedReader br = new BufferedReader(new FileReader(file));
-		String st = "";
+		String st;
 		int linesCounter = 0;
 
 
@@ -273,10 +264,7 @@ public class ExternalMemoryImpl implements IExternalMemory {
 
 		LinkedList<String> lines = new LinkedList<>();
 
-		while (st != null) {
-			if ((st = br.readLine()) == null) {
-				break;
-			}
+		while ((st = br.readLine()) != null) {
 			if (subSelect(st, substrSelect, colNumSelect))
 			{
 				lines.add(st);
@@ -317,10 +305,10 @@ public class ExternalMemoryImpl implements IExternalMemory {
 	}
 
 	public void select(String in, String out, int colNumSelect,
-					   String substrSelect, String tmpPath) {
+					   String subStrSelect, String tmpPath) {
 
 		try {
-			selecThrowException(in, out, colNumSelect, substrSelect);
+			selecThrowException(in, out, colNumSelect, subStrSelect);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
