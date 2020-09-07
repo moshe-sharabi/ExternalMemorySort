@@ -6,9 +6,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-
-
-
 public class ExternalMemoryImpl implements IExternalMemory {
 
 	private static final int bytesInBlock = 20000; // Y
