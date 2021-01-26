@@ -58,8 +58,14 @@ public class ExternalMemoryImpl implements IExternalMemory {
             for (int i = 0; i < linesInRam; i++) {
                 st = br.readLine();
                 if ((st == null)) break;
-                if (!select) {lines.add(st); continue;}
-                if (subSelect(st, subStr, columnSelect)){lines.add(st); continue;}
+                if (!select) {
+                    lines.add(st);
+                    continue;
+                }
+                if (subSelect(st, subStr, columnSelect)) {
+                    lines.add(st);
+                    continue;
+                }
                 i--;
             }
 
@@ -154,14 +160,11 @@ public class ExternalMemoryImpl implements IExternalMemory {
 
     }
 
-    /**
-     * this function merge some runs (from sortedFiles) into new run on a new file
-     */
     private File mergeRuns(List<File> sortedFiles, String tmpPath) {
-
+        //this function merge some runs (from sortedFiles) into new run on a new file
         List<File> saveOldRunsBeforeMerge = new LinkedList<>();
         int counter1 = 0;
-//		int numBuffer = blocksInRam -100; //save one block to output and 99 blocks for java variables etc.
+		//int numBuffer = blocksInRam -100; //save one block to output and 99 blocks for java variables etc.
         int numBuffer = 20; //save one block to output and 99 blocks for java variables etc.
 
         while (sortedFiles.size() > 1) {
@@ -185,9 +188,9 @@ public class ExternalMemoryImpl implements IExternalMemory {
         }
         //now delete the old files/runs which created
         while (!saveOldRunsBeforeMerge.isEmpty()) {
-            File todelete = saveOldRunsBeforeMerge.remove(0);
-            if (!todelete.delete()) {
-                System.err.println("cant delete this file: " + todelete.getName());
+            File toDelete = saveOldRunsBeforeMerge.remove(0);
+            if (!toDelete.delete()) {
+                System.err.println("cant delete this file: " + toDelete.getName());
             }
         }
         return sortedFiles.get(0);
@@ -200,41 +203,8 @@ public class ExternalMemoryImpl implements IExternalMemory {
         return trimmedLine[col - 1].contains(subString);
     }
 
-    private void writeToFile(LinkedList<String> lines, Writer w) throws IOException {
-        for (String line : lines) {
-            w.write(line + "\n");
-        }
-    }
-
-    private void selectThrowException(String in, String out, int colNumSelect, String substrSelect) throws IOException {
-        int sizeOfLine = getBytesOfLine(in); // X
-        int linesInRam = blocksInRam * (bytesInBlock / sizeOfLine);
-
-        File file = new File(in);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String st;
-        int linesCounter = 0;
-
-
-        File statText = new File(out);
-        FileOutputStream is = new FileOutputStream(statText);
-        OutputStreamWriter osw = new OutputStreamWriter(is);
-        Writer w = new BufferedWriter(osw);
-
-        LinkedList<String> lines = new LinkedList<>();
-
-        while ((st = br.readLine()) != null) {
-            if (subSelect(st, substrSelect, colNumSelect)) {
-                lines.add(st);
-                if (linesCounter++ > linesInRam) {
-                    linesCounter = 0;
-                    writeToFile(lines, w);
-                    lines.clear();
-                }
-            }
-        }
-        writeToFile(lines, w);
-        w.close();
+    private void writeToFile(List<String> lines, Writer w) throws IOException {
+        for (String line : lines) w.write(line + "\n");
     }
 
 
@@ -253,15 +223,40 @@ public class ExternalMemoryImpl implements IExternalMemory {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public void select(String in, String out, int colNumSelect,
                        String subStrSelect, String tmpPath) {
 
         try {
-            selectThrowException(in, out, colNumSelect, subStrSelect);
+            int sizeOfLine = getBytesOfLine(in); // X
+            int linesInRam = blocksInRam * (bytesInBlock / sizeOfLine);
+
+            File file = new File(in);
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String st;
+            int linesCounter = 0;
+
+
+            File statText = new File(out);
+            FileOutputStream is = new FileOutputStream(statText);
+            OutputStreamWriter osw = new OutputStreamWriter(is);
+            Writer w = new BufferedWriter(osw);
+
+            LinkedList<String> lines = new LinkedList<>();
+
+            while ((st = br.readLine()) != null) {
+                if (subSelect(st, subStrSelect, colNumSelect)) {
+                    lines.add(st);
+                    if (linesCounter++ > linesInRam) {
+                        linesCounter = 0;
+                        writeToFile(lines, w);
+                        lines.clear();
+                    }
+                }
+            }
+            writeToFile(lines, w);
+            w.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
